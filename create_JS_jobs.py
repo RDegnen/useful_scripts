@@ -55,7 +55,7 @@ sleep 5
 
     <run_time />
 </job>
-# """ % (notebook_dir, path_without_home, port)
+ """ % (notebook_dir, path_without_home, port)
         )
     else:
         file(src + 'start_kernel.job.xml', 'w').write(
