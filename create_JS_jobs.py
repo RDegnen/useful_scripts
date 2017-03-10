@@ -33,7 +33,7 @@ curl -i -X GET http://%s:%s/%s > /tmp/%s_status
             )
 
     def create_start_kernel_job(self, notebook, spark, notebook_dir, port, agent):
-        # Use [] if they are in file name
+        # Use [] if they are in file name. NECESSARY!
         path_without_home = "/".join(notebook_dir.split("/")[3:])
 
         if spark:
