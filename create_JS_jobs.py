@@ -2,6 +2,8 @@
 import os
 import sys
 
+client = "uber"
+
 # Create the kerenelgateway api calls
 def create_cell_api_calls():
     number_of_jobs = raw_input("Number of cells: ")
@@ -18,13 +20,13 @@ def create_cell_api_calls():
     <script  language="shell">
         <![CDATA[
 curl -i -X GET http://%s:%s/%s > /tmp/%s_status
-/opt/jobscheduler_jobs/scripts/check_jupyter_success.sh /tmp/%s_status
+/opt/jobscheduler_jobs/scripts/check_jupyter_success.sh /tmp/%s_status /var/log/sparkm2/%s/%s.log
         ]]>
     </script>
 
     <run_time />
 </job>
-""" % (n, ip, port, n, notebook, notebook)
+""" % (n, ip, port, n, notebook, notebook, client, notebook)
         )
 
 def create_start_kernel_job():
@@ -48,14 +50,14 @@ export SPARK_HOME=/home/rifiniti/spark
 export PATH=/home/rifiniti/anaconda2/bin:$SPARK_HOME/bin:$PATH
 export PYTHONPATH=/home/rifiniti/spark/python/lib/py4j-0.10.3-src.zip:/home/rifiniti/spark/python:/home/rifiniti/spark/python/build
 export PYTHONPATH=$PYTHONPATH:%s
-/home/rifiniti/start_kernel.sh /%s %s
+/home/rifiniti/start_kernel.sh /%s%s %s
 sleep 5
         ]]>
     </script>
 
     <run_time />
 </job>
- """ % (notebook_dir, path_without_home, port)
+""" % (notebook_dir, path_without_home, notebook, port)
         )
     else:
         file(src + 'start_kernel.job.xml', 'w').write(
@@ -67,14 +69,14 @@ sleep 5
         <![CDATA[
 export PYTHONPATH=/home/rifiniti/spark/python/lib/py4j-0.10.3-src.zip:/home/rifiniti/spark/python:/home/rifiniti/spark/python/build
 export PYTHONPATH=$PYTHONPATH:%s
-/home/rifiniti/start_kernel.sh /%s %s
+/home/rifiniti/start_kernel.sh /%s%s %s
 sleep 5
         ]]>
     </script>
 
     <run_time />
 </job>
-# """ % (agent, notebook_dir, path_without_home, port)
+""" % (agent, notebook_dir, path_without_home, notebook, port)
         )
 
 def create_kill_kernel_job():
