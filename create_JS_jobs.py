@@ -4,18 +4,15 @@ import sys
 import fire
 
 # Create the kerenelgateway api calls
-class Create_Live_Folder(object):
-    # client = 'uber'
-    # src = '/Users/ross/job_chains/uber'
+class Create_Chain_Parts(object):
+
     def __init__(self):
         self.client = 'uber'
         self.src = '/Users/ross/job_chains/uber/4_TEST/'
 
     def create_cell_api_calls(self, number_of_jobs, notebook, ip, port):
-        # number_of_jobs = raw_input("Number of cells: ")
-        # notebook = raw_input("Name of notebook (DONT use [] if they are in file name): ")
-        # ip = raw_input("Internal IP of server: ")
-        # port = raw_input("Port to make calls to: ")
+        # DONT use [] if they are in file name
+        notebook = notebook.split('_[')[0]
         job_range = range(1, int(number_of_jobs) + 1)
         for n in job_range:
             file(self.src + 'cell%s.job.xml' % n, 'w').write(
@@ -35,16 +32,11 @@ curl -i -X GET http://%s:%s/%s > /tmp/%s_status
 """ % (n, ip, port, n, notebook, notebook, self.client, notebook)
             )
 
-    def create_start_kernel_job():
-        notebook = raw_input("Name of notebook (use [] if they are in file name): ")
-        spark = raw_input("Spark (y/n)?: ")
-        notebook_dir = raw_input("Absolute path to notebook parent dir: ")
-        port = raw_input("Port to run kerenelgateway on: ")
-        agent = raw_input("Name of agent: ")
-
+    def create_start_kernel_job(self, notebook, spark, notebook_dir, port, agent):
+        # Use [] if they are in file name
         path_without_home = "/".join(notebook_dir.split("/")[3:])
 
-        if spark == "y":
+        if spark:
             file(self.src + 'start_kernel.job.xml', 'w').write(
 """<?xml version="1.0" encoding="ISO-8859-1"?>
 
@@ -56,7 +48,7 @@ export SPARK_HOME=/home/rifiniti/spark
 export PATH=/home/rifiniti/anaconda2/bin:$SPARK_HOME/bin:$PATH
 export PYTHONPATH=/home/rifiniti/spark/python/lib/py4j-0.10.3-src.zip:/home/rifiniti/spark/python:/home/rifiniti/spark/python/build
 export PYTHONPATH=$PYTHONPATH:%s
-/home/rifiniti/start_kernel.sh /%s%s %s
+/home/rifiniti/start_kernel.sh /%s/%s %s
 sleep 5
         ]]>
     </script>
@@ -85,10 +77,9 @@ sleep 5
 """ % (agent, notebook_dir, path_without_home, notebook, port)
             )
 
-    def create_kill_kernel_job():
-        notebook = raw_input("Name of notebook (Exclude the [] and everything between them): ")
-        agent = raw_input("Name of agent: ")
-
+    def create_kill_kernel_job(self, notebook, agent):
+        # Exclude the [] and everything between them
+        notebook = notebook.split('_[')[0]
         file(self.src + 'kill_kernel.job.xml', 'w').write(
 """<?xml version="1.0" encoding="ISO-8859-1"?>
 
@@ -105,9 +96,9 @@ sleep 5
 """ % (agent, notebook)
         )
 
-    def create_job_chain():
-        notebook = raw_input("Name of notebook (DONT use [] if they are in file name): ")
-        number_of_jobs = raw_input("Number of cells: ")
+    def create_job_chain(self, notebook, number_of_jobs):
+        # DONT use [] if they are in file name
+        notebook = notebook.split('_[')[0]
         job_range = range(1, int(number_of_jobs) + 1)
         state = 200
 
@@ -140,35 +131,7 @@ sleep 5
         )
 
 def main():
-    fire.Fire(Create_Live_Folder)
+    fire.Fire(Create_Chain_Parts)
 
 if __name__ == '__main__':
     main()
-
-# try:
-#     src = sys.argv[1]
-#     function = sys.argv[2]
-#
-#     if function == "api_calls":
-#         create_cell_api_calls()
-#     elif function == "start_kernel":
-#         create_start_kernel_job()
-#     elif function == "kill_kernel":
-#         create_kill_kernel_job()
-#     elif function == "job_chain":
-#         create_job_chain()
-# except IndexError:
-#     print(
-#     """
-#     Use
-#     -----------------------
-#     /<path to script> <dir where job chain will be> <option>
-#
-#     Options
-#     -----------------------
-#     api_calls: Create jobs for api calls to cells
-#     start_kernel: Create the job that starts the jupyter kernel gateway kernel
-#     kill_kernel: Create the job to kill the jupyter kernel gateway kernel
-#     job_chain: Create the job chain
-#     """
-#     )
