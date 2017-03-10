@@ -8,18 +8,19 @@ class Create_Chain_Parts(object):
 
     def __init__(self):
         self.client = 'uber'
-        self.src = '/Users/ross/job_chains/uber/4_TEST/'
+        self.src = '/Users/ross/job_chains/uber/4_HARMONIZATION/'
 
-    def create_cell_api_calls(self, number_of_jobs, notebook, ip, port):
+    def api_calls(self, number_of_jobs, notebook, ip, port):
         # DONT use [] if they are in file name
         notebook = notebook.split('_[')[0]
         job_range = range(1, int(number_of_jobs) + 1)
         for n in job_range:
-            file(self.src + 'cell%s.job.xml' % n, 'w').write(
+            endpoint = "%s-%s" % (notebook, n)
+            file(self.src + 'cell_%s.job.xml' % (endpoint), 'w').write(
 """<?xml version="1.0" encoding="ISO-8859-1"?>
 
 
-<job  order="yes" stop_on_error="no" title="cell%s">
+<job  order="yes" stop_on_error="no" title="cell_%s">
     <script  language="shell">
         <![CDATA[
 curl -i -X GET http://%s:%s/%s > /tmp/%s_status
@@ -29,10 +30,10 @@ curl -i -X GET http://%s:%s/%s > /tmp/%s_status
 
     <run_time />
 </job>
-""" % (n, ip, port, n, notebook, notebook, self.client, notebook)
+""" % (endpoint, ip, port, endpoint, notebook, notebook, self.client, notebook)
             )
 
-    def create_start_kernel_job(self, notebook, spark, notebook_dir, port, agent):
+    def start_kernel(self, notebook, spark, notebook_dir, port, agent):
         # Use [] if they are in file name. NECESSARY!
         path_without_home = "/".join(notebook_dir.split("/")[3:])
 
@@ -77,7 +78,7 @@ sleep 5
 """ % (agent, notebook_dir, path_without_home, notebook, port)
             )
 
-    def create_kill_kernel_job(self, notebook, agent):
+    def kill_kernel(self, notebook, agent):
         # Exclude the [] and everything between them
         notebook = notebook.split('_[')[0]
         file(self.src + 'kill_kernel.job.xml', 'w').write(
@@ -96,7 +97,7 @@ sleep 5
 """ % (agent, notebook)
         )
 
-    def create_job_chain(self, notebook, number_of_jobs):
+    def job_chain(self, notebook, number_of_jobs):
         # DONT use [] if they are in file name
         notebook = notebook.split('_[')[0]
         job_range = range(1, int(number_of_jobs) + 1)
@@ -112,10 +113,11 @@ sleep 5
         )
 
         for n in job_range:
+            endpoint = "%s-%s" % (notebook, n)
             file(self.src + "%s.job_chain.xml" % notebook, 'a').write(
     """
-    <job_chain_node  state="%s" job="cell%s" next_state="%s" error_state="error"/>
-    """ % (state, n, state + 100)
+    <job_chain_node  state="%s" job="cell_%s" next_state="%s" error_state="error"/>
+    """ % (state, endpoint, state + 100)
         )
             state += 100
 
@@ -128,6 +130,18 @@ sleep 5
     <job_chain_node  state="error"/>
 </job_chain>
 """ % (state)
+        )
+
+    def order(self, notebook):
+        # DONT use [] if they are in file name
+        file(self.src + "%s,%s.order.xml" %(notebook, notebook), 'w').write(
+"""<?xml version="1.0" encoding="ISO-8859-1"?>
+
+
+<order >
+    <run_time />
+</order>
+"""
         )
 
 def main():
