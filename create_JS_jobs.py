@@ -8,7 +8,7 @@ class Create_Chain_Parts(object):
 
     def __init__(self):
         self.client = 'uber'
-        self.src = '/Users/ross/job_chains/uber/4_HARMONIZATION/'
+        self.src = '/Users/ross/job_chains/uber/3_FILTER/'
 
     def api_calls(self, number_of_jobs, notebook, ip, port):
         # DONT use [] if they are in file name
@@ -38,7 +38,7 @@ curl -i -X GET http://%s:%s/%s > /tmp/%s_status
         path_without_home = "/".join(notebook_dir.split("/")[3:])
 
         if spark:
-            file(self.src + 'start_kernel.job.xml', 'w').write(
+            file(self.src + 'start_kernel_%s.job.xml' % notebook, 'w').write(
 """<?xml version="1.0" encoding="ISO-8859-1"?>
 
 
@@ -81,7 +81,7 @@ sleep 5
     def kill_kernel(self, notebook, agent):
         # Exclude the [] and everything between them
         notebook = notebook.split('_[')[0]
-        file(self.src + 'kill_kernel.job.xml', 'w').write(
+        file(self.src + 'kill_kernel_%s.job.xml' % notebook, 'w').write(
 """<?xml version="1.0" encoding="ISO-8859-1"?>
 
 
@@ -97,7 +97,7 @@ sleep 5
 """ % (agent, notebook)
         )
 
-    def job_chain(self, notebook, number_of_jobs):
+    def job_chain(self, number_of_jobs, notebook):
         # DONT use [] if they are in file name
         notebook = notebook.split('_[')[0]
         job_range = range(1, int(number_of_jobs) + 1)
@@ -108,8 +108,8 @@ sleep 5
 
 
 <job_chain  title="%s">
-    <job_chain_node  state="100" job="start_kernel" next_state="200" error_state="error"/>
-""" % (notebook)
+    <job_chain_node  state="100" job="start_kernel_%s" next_state="200" error_state="error"/>
+""" % (notebook, notebook)
         )
 
         for n in job_range:
@@ -123,13 +123,13 @@ sleep 5
 
         file(self.src + "%s.job_chain.xml" % notebook, 'a').write(
     """
-    <job_chain_node  state="%s" job="kill_kernel" next_state="success" error_state="error"/>
+    <job_chain_node  state="%s" job="kill_kernel_%s" next_state="success" error_state="error"/>
 
     <job_chain_node  state="success"/>
 
     <job_chain_node  state="error"/>
 </job_chain>
-""" % (state)
+""" % (state, notebook)
         )
 
     def order(self, notebook):
