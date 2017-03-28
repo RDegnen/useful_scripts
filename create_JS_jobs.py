@@ -8,7 +8,7 @@ class Create_Chain_Parts(object):
 
     def __init__(self):
         self.client = 'uber'
-        self.src = '/Users/ross/job_chains/uber/3_FILTER/'
+        self.src = '/Users/ross/job_chains/uber/'
 
     def api_calls(self, number_of_jobs, notebook, ip, port):
         # DONT use [] if they are in file name
@@ -97,7 +97,7 @@ sleep 5
 """ % (agent, notebook)
         )
 
-    def job_chain(self, number_of_jobs, notebook):
+    def job_chain(self, number_of_jobs, notebook, next_chain):
         # DONT use [] if they are in file name
         notebook = notebook.split('_[')[0]
         job_range = range(1, int(number_of_jobs) + 1)
@@ -123,13 +123,20 @@ sleep 5
 
         file(self.src + "%s.job_chain.xml" % notebook, 'a').write(
     """
-    <job_chain_node  state="%s" job="kill_kernel_%s" next_state="success" error_state="error"/>
+    <job_chain_node  state="%s" job="kill_kernel_%s" next_state="success" error_state="error">
+        <on_return_codes >
+            <on_return_code return_code="0">
+                <add_order  xmlns="https://jobscheduler-plugins.sos-berlin.com/NodeOrderPlugin" job_chain="%s">
+                </add_order>
+            </on_return_code>
+        </on_return_codes>
+    </job_chain_node>
 
     <job_chain_node  state="success"/>
 
     <job_chain_node  state="error"/>
 </job_chain>
-""" % (state, notebook)
+""" % (state, notebook, next_chain)
         )
 
     def order(self, notebook):
